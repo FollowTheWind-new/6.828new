@@ -302,17 +302,6 @@ page_alloc(int alloc_flags)
     memset(page2kva(pg), '\0', PGSIZE);
   } 
 	return pg;
-  // struct PageInfo *ret = page_free_list;
-	// if (ret == NULL) {
-	// 	// cprintf("page_alloc: out of free memory\n");
-	// 	return NULL;
-	// }
-	// page_free_list = ret->pp_link;
-	// ret->pp_link = NULL;
-	// if (alloc_flags & ALLOC_ZERO) {
-	// 	memset(page2kva(ret), 0, PGSIZE);
-	// }
-	// return ret;
 }
 
 //
@@ -367,7 +356,16 @@ pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
 	// Fill this function in
-	return NULL;
+  pte_t *pte = pgdir + PDX(va);
+  if(!(*pte & PTE_P)) {
+    if(!create) return NULL;
+    struct PageInfo * pg = page_alloc(1);
+    if(!pg) return NULL;
+    pg->pp_ref++;
+    *pte = page2pa(pg) | PTE_U | PTE_W | PTE_P;
+  }
+  return (pte_t *)KADDR(PTE_ADDR(*pte)) + PTX(va);
+
 }
 
 //
@@ -385,6 +383,15 @@ static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
 	// Fill this function in
+  size_t num = ROUNDUP(size, PGSIZE)/PGSIZE;
+  pte_t *pte;
+  for(size_t i = 0; i < num; i++) {
+    pte = pgdir_walk(pgdir, (void *)va, 1);
+    if(!pte) panic("boot_map: page alloc error!\n");
+    *pte = pa | perm | PTE_P;
+    pa += PGSIZE;
+    va += PGSIZE;
+  }
 }
 
 //
@@ -416,9 +423,19 @@ int
 page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 {
 	// Fill this function in
-	return 0;
-}
+  pte_t *pte = pgdir_walk(pgdir, va, 1);
+  if(!pte) return -E_NO_MEM;
+  pp->pp_ref++;
+  if((*pte) & PTE_P) {
+    page_remove(pgdir, va);
+  }
+  physaddr_t pa = page2pa(pp);
+  *pte = pa | perm | PTE_P;
+  pgdir[PDX(va)] |=perm;
 
+	return 0;
+
+}
 //
 // Return the page mapped at virtual address 'va'.
 // If pte_store is not zero, then we store in it the address
@@ -434,6 +451,12 @@ struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
 	// Fill this function in
+  pte_t *pte = pgdir_walk(pgdir, va, 0);
+  if(pte && (*pte & PTE_P)) {
+    physaddr_t pa = PTE_ADDR(*pte);
+    if(pte_store) *pte_store = pte;
+    return pa2page(pa); 
+  } 
 	return NULL;
 }
 
@@ -456,6 +479,13 @@ void
 page_remove(pde_t *pgdir, void *va)
 {
 	// Fill this function in
+  pte_t *pte;
+  struct PageInfo *pg = page_lookup(pgdir, va, &pte);
+  if(!pg) return;
+  page_decref(pg);
+  *pte = 0;
+  tlb_invalidate(pgdir ,va);
+  
 }
 
 //
