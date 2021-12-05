@@ -365,7 +365,6 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
     *pte = page2pa(pg) | PTE_U | PTE_W | PTE_P;
   }
   return (pte_t *)KADDR(PTE_ADDR(*pte)) + PTX(va);
-
 }
 
 //
