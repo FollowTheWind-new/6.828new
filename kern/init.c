@@ -32,9 +32,10 @@ i386_init(void)
 	mem_init();
 
 	// Lab 3 user environment initialization functions
-	env_init();
-	trap_init();
 
+  env_init();
+	trap_init();
+  cprintf("continue here?");
 #if defined(TEST)
 	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
