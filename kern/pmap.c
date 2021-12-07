@@ -247,8 +247,7 @@ mem_init(void)
 // allocator functions below to allocate and deallocate physical
 // memory via the page_free_list.
 //
-void
-page_init(void)
+void page_init(void)
 {
 	// The example code here marks all physical pages as free.
 	// However this is not truly the case.  What memory is free?
