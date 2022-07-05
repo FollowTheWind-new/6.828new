@@ -95,18 +95,15 @@ boot_alloc(uint32_t n)
 	// to any kernel code or global variables.
 	if (!nextfree) {
 		extern char end[];
-		nextfree = ROUNDUP((char *) end, PGSIZE);
+		nextfree = ROUNDUP((char *) end, PGSIZE)  + PGSIZE;
 	}
   // Allocate a chunk large enough to hold 'n' bytes, then update
 	// nextfree.  Make sure nextfree is kept aligned
 	// to a multiple of PGSIZE.
 	//
 	// LAB 2: Your code here.
-  if((uint32_t)nextfree+n-KERNBASE > npages * PGSIZE) 
-      panic("boot_alloc:Not enough memory!\n");
   result = nextfree;
-  nextfree = ROUNDUP(nextfree+n, PGSIZE);
-
+  nextfree = ROUNDUP((char *)result + n, PGSIZE);
 	return result;
 }
 
@@ -154,6 +151,8 @@ mem_init(void)
 	// Your code goes here:
   pages = boot_alloc(npages * sizeof(struct PageInfo));
   memset(pages, 0, npages * sizeof(struct PageInfo));
+  envs = (struct Env *)boot_alloc(NENV * sizeof(struct Env));
+  memset(envs, 0, sizeof(struct Env) * NENV);
   
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -186,8 +185,6 @@ mem_init(void)
 	//    - envs itself -- kernel RW, user NONE
   // what is envs itself?
 	// LAB 3: Your code here.
-  envs = (struct Env *)boot_alloc(NENV * sizeof(struct Env));
-  memset(envs, 0, sizeof(struct Env) * NENV);
   boot_map_region(kern_pgdir, UENVS, PTSIZE, PADDR(envs), PTE_U | PTE_P);
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -210,7 +207,7 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-  boot_map_region(kern_pgdir, KERNBASE, -KERNBASE, 0, PTE_W | PTE_P);
+  boot_map_region(kern_pgdir, KERNBASE, 0xffffffff - KERNBASE, 0, PTE_W );
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
 
@@ -247,8 +244,7 @@ mem_init(void)
 // allocator functions below to allocate and deallocate physical
 // memory via the page_free_list.
 //
-void
-page_init(void)
+void page_init(void)
 {
 	// The example code here marks all physical pages as free.
 	// However this is not truly the case.  What memory is free?
@@ -384,6 +380,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
   return (pte_t *) (KADDR(PTE_ADDR(*pde))) + PTX(va);
 }
 
+
 //
 // Map [va, va+size) of virtual address space to physical [pa, pa+size)
 // in the page table rooted at pgdir.  Size is a multiple of PGSIZE, and
@@ -445,6 +442,7 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
   *pte = page2pa(pp) | perm | PTE_P;
   return 0;
 }
+
 
 //
 // Return the page mapped at virtual address 'va'.
@@ -538,7 +536,16 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
-
+  perm |= PTE_P;
+  uintptr_t va_head = (uintptr_t)ROUNDDOWN(va, PGSIZE);
+  uintptr_t va_end = (uintptr_t)ROUNDUP(va + len, PGSIZE);
+  pte_t *pte = NULL;
+  while(va_head < va_end) {
+    pte = pgdir_walk(env->env_pgdir, (void *)va_head, 0);
+    user_mem_check_addr = (va_head < (uintptr_t)va ?(uintptr_t)va : va_head);
+    if((va_head >= ULIM)||!pte||((*pte)&perm) != perm) return -E_FAULT;
+    va_head += PGSIZE;
+  }
 	return 0;
 }
 

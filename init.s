@@ -162,20 +162,32 @@ i386_init:
 	.stabn	68,0,34,.LM16-.LFBB2
 .LM16:
 	call	cons_init@PLT
+<<<<<<< HEAD
 	.stabn	68,0,37,.LM17-.LFBB2
+=======
+	.stabn	68,0,36,.LM17-.LFBB2
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM17:
 	leaq	.LC2(%rip), %rdi
 	movl	$6828, %esi
 	xorl	%eax, %eax
 	call	cprintf@PLT
+<<<<<<< HEAD
 	.stabn	68,0,40,.LM18-.LFBB2
+=======
+	.stabn	68,0,39,.LM18-.LFBB2
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM18:
 	movl	$5, %edi
 	call	test_backtrace
 	.p2align 4,,10
 	.p2align 3
 .L7:
+<<<<<<< HEAD
 	.stabn	68,0,44,.LM19-.LFBB2
+=======
+	.stabn	68,0,43,.LM19-.LFBB2
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM19:
 	xorl	%edi, %edi
 	call	monitor@PLT
@@ -198,7 +210,11 @@ i386_init:
 	.globl	_panic
 	.type	_panic, @function
 _panic:
+<<<<<<< HEAD
 	.stabn	68,0,60,.LM20-.LFBB3
+=======
+	.stabn	68,0,59,.LM20-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM20:
 .LFBB3:
 .LFB2:
@@ -226,24 +242,37 @@ _panic:
 	movaps	%xmm6, 176(%rsp)
 	movaps	%xmm7, 192(%rsp)
 .L10:
+<<<<<<< HEAD
 	.stabn	68,0,60,.LM21-.LFBB3
+=======
+	.stabn	68,0,59,.LM21-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM21:
 	movq	%fs:40, %rax
 	movq	%rax, 24(%rsp)
 	xorl	%eax, %eax
+<<<<<<< HEAD
 	.stabn	68,0,63,.LM22-.LFBB3
+=======
+	.stabn	68,0,62,.LM22-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM22:
 	cmpq	$0, panicstr(%rip)
 	je	.L15
 	.p2align 4,,10
 	.p2align 3
 .L12:
+<<<<<<< HEAD
 	.stabn	68,0,79,.LM23-.LFBB3
+=======
+	.stabn	68,0,78,.LM23-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM23:
 	xorl	%edi, %edi
 	call	monitor@PLT
 	jmp	.L12
 .L15:
+<<<<<<< HEAD
 	.stabn	68,0,65,.LM24-.LFBB3
 .LM24:
 	movq	%rbp, panicstr(%rip)
@@ -262,10 +291,31 @@ _panic:
 	movq	%r10, %rsi
 	movl	%r11d, %edx
 	.stabn	68,0,70,.LM28-.LFBB3
+=======
+	.stabn	68,0,64,.LM24-.LFBB3
+.LM24:
+	movq	%rbp, panicstr(%rip)
+	.stabn	68,0,67,.LM25-.LFBB3
+.LM25:
+#APP
+# 67 "kern/init.c" 1
+	cli; cld
+# 0 "" 2
+	.stabn	68,0,69,.LM26-.LFBB3
+.LM26:
+#NO_APP
+	leaq	224(%rsp), %rax
+	.stabn	68,0,70,.LM27-.LFBB3
+.LM27:
+	movq	%r10, %rsi
+	movl	%r11d, %edx
+	.stabn	68,0,69,.LM28-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM28:
 	movl	$24, (%rsp)
 	movq	%rax, 8(%rsp)
 	leaq	32(%rsp), %rax
+<<<<<<< HEAD
 	.stabn	68,0,71,.LM29-.LFBB3
 .LM29:
 	leaq	.LC3(%rip), %rdi
@@ -282,11 +332,33 @@ _panic:
 .LM33:
 	call	cprintf@PLT
 	.stabn	68,0,72,.LM34-.LFBB3
+=======
+	.stabn	68,0,70,.LM29-.LFBB3
+.LM29:
+	leaq	.LC3(%rip), %rdi
+	.stabn	68,0,69,.LM30-.LFBB3
+.LM30:
+	movq	%rax, 16(%rsp)
+	.stabn	68,0,70,.LM31-.LFBB3
+.LM31:
+	xorl	%eax, %eax
+	.stabn	68,0,69,.LM32-.LFBB3
+.LM32:
+	movl	$48, 4(%rsp)
+	.stabn	68,0,70,.LM33-.LFBB3
+.LM33:
+	call	cprintf@PLT
+	.stabn	68,0,71,.LM34-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM34:
 	movq	%rbp, %rdi
 	movq	%rsp, %rsi
 	call	vcprintf@PLT
+<<<<<<< HEAD
 	.stabn	68,0,73,.LM35-.LFBB3
+=======
+	.stabn	68,0,72,.LM35-.LFBB3
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM35:
 	leaq	.LC4(%rip), %rdi
 	xorl	%eax, %eax
@@ -311,7 +383,11 @@ _panic:
 	.globl	_warn
 	.type	_warn, @function
 _warn:
+<<<<<<< HEAD
 	.stabn	68,0,85,.LM36-.LFBB4
+=======
+	.stabn	68,0,84,.LM36-.LFBB4
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM36:
 .LFBB4:
 .LFB3:
@@ -339,11 +415,16 @@ _warn:
 	movaps	%xmm6, 176(%rsp)
 	movaps	%xmm7, 192(%rsp)
 .L17:
+<<<<<<< HEAD
 	.stabn	68,0,85,.LM37-.LFBB4
+=======
+	.stabn	68,0,84,.LM37-.LFBB4
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM37:
 	movq	%fs:40, %rax
 	movq	%rax, 24(%rsp)
 	xorl	%eax, %eax
+<<<<<<< HEAD
 	.stabn	68,0,88,.LM38-.LFBB4
 .LM38:
 	leaq	224(%rsp), %rax
@@ -372,16 +453,54 @@ _warn:
 .LM45:
 	call	cprintf@PLT
 	.stabn	68,0,90,.LM46-.LFBB4
+=======
+	.stabn	68,0,87,.LM38-.LFBB4
+.LM38:
+	leaq	224(%rsp), %rax
+	.stabn	68,0,88,.LM39-.LFBB4
+.LM39:
+	movq	%r10, %rsi
+	movl	%r11d, %edx
+	.stabn	68,0,87,.LM40-.LFBB4
+.LM40:
+	movq	%rax, 8(%rsp)
+	leaq	32(%rsp), %rax
+	.stabn	68,0,88,.LM41-.LFBB4
+.LM41:
+	leaq	.LC5(%rip), %rdi
+	.stabn	68,0,87,.LM42-.LFBB4
+.LM42:
+	movq	%rax, 16(%rsp)
+	.stabn	68,0,88,.LM43-.LFBB4
+.LM43:
+	xorl	%eax, %eax
+	.stabn	68,0,87,.LM44-.LFBB4
+.LM44:
+	movl	$24, (%rsp)
+	movl	$48, 4(%rsp)
+	.stabn	68,0,88,.LM45-.LFBB4
+.LM45:
+	call	cprintf@PLT
+	.stabn	68,0,89,.LM46-.LFBB4
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM46:
 	movq	%rsp, %rsi
 	movq	%rbp, %rdi
 	call	vcprintf@PLT
+<<<<<<< HEAD
 	.stabn	68,0,91,.LM47-.LFBB4
+=======
+	.stabn	68,0,90,.LM47-.LFBB4
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM47:
 	xorl	%eax, %eax
 	leaq	.LC4(%rip), %rdi
 	call	cprintf@PLT
+<<<<<<< HEAD
 	.stabn	68,0,93,.LM48-.LFBB4
+=======
+	.stabn	68,0,92,.LM48-.LFBB4
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 .LM48:
 	movq	24(%rsp), %rax
 	xorq	%fs:40, %rax
@@ -406,7 +525,11 @@ _warn:
 	.stabs	"panicstr:G(0,26)",32,0,0,0
 	.stabs	"",100,0,0,.Letext0
 .Letext0:
+<<<<<<< HEAD
 	.ident	"GCC: (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0"
+=======
+	.ident	"GCC: (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0"
+>>>>>>> 05e256fba6abbfbbf71e886b1fc1618b5a768a15
 	.section	.note.GNU-stack,"",@progbits
 	.section	.note.gnu.property,"a"
 	.align 8

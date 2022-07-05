@@ -183,7 +183,6 @@ env_setup_vm(struct Env *e)
 	//	is an exception -- you need to increment env_pgdir's
 	//	pp_ref for env_free to work correctly.
 	//    - The functions in kern/pmap.h are handy.
-
 	// LAB 3: Your code here.
   p->pp_ref++;
   pde_t *pgdir = (pde_t *)page2kva(p);
@@ -276,18 +275,16 @@ region_alloc(struct Env *e, void *va, size_t len)
 	//   'va' and 'len' values that are not page-aligned.
 	//   You should round va down, and round (va + len) up.
 	//   (Watch out for corner-cases!)
-  size_t cnt = 0;
-  len = ROUNDUP(len, PGSIZE);
-  struct PageInfo *pp;
-  pte_t *pte = NULL;
-  for(va = ROUNDDOWN(va, PGSIZE); cnt < len; cnt += PGSIZE, va += PGSIZE){
-    pp = page_alloc(ALLOC_ZERO);
-    if(!pp) 
-      panic("page_alloc in region_alloc: not enough pages!\n");
-    if(page_insert(e->env_pgdir, pp, va, PTE_U | PTE_W | PTE_P))
-      panic("page_insert in region_alloc: Not enough memory!\n");
+  void * start = (void *)ROUNDDOWN(va, PGSIZE);
+  void * end = (void *)ROUNDUP((va + len), PGSIZE);
+  struct PageInfo *pg;
+  while(start < end) {
+    if(!(pg = page_alloc(1))) panic("region_alloc:page alloc fail\n");
+    page_insert(e->env_pgdir, pg, start, PTE_U | PTE_W);
+    start += PGSIZE;
   }
 }
+
 
 //
 // Set up the initial program binary, stack, and processor flags
@@ -364,6 +361,7 @@ load_icode(struct Env *e, uint8_t *binary)
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE;
 	// LAB 3: Your code here.
+	region_alloc(e, (void *) (USTACKTOP - PGSIZE), PGSIZE);
 }
 
 //
@@ -380,7 +378,7 @@ env_create(uint8_t *binary, enum EnvType type)
   int errono = 0;
   struct Env *e;
   if((errono = env_alloc(&e, 0)))
-    panic("env_create error: env_alloc returns %d", errono);
+    panic("env_create error: env_alloc returns %e", errono);
   load_icode(e, binary);
   e->env_type = type;
 }
