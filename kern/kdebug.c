@@ -66,7 +66,9 @@ stab_binsearch(const struct Stab *stabs, int *region_left, int *region_right,
 		int true_m = (l + r) / 2, m = true_m;
 
 		// search for earliest stab with right type
-		while (m >= l && stabs[m].n_type != type)
+		// why ?
+
+    while (m >= l && stabs[m].n_type != type)
 			m--;
 		if (m < l) {	// no match in [l, m]
 			l = true_m + 1;
@@ -204,7 +206,8 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	Look at the STABS documentation and <inc/stab.h> to find
 	//	which one.
 	// Your code here.
-
+  stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+  info->eip_line = lline > rline ? -1 : stabs[lline].n_desc; 
 
 	// Search backwards from the line number for the relevant filename
 	// stab.
