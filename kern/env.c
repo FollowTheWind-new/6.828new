@@ -192,6 +192,7 @@ env_setup_vm(struct Env *e)
 	// Permissions: kernel R, user R
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
+
 	return 0;
 }
 
@@ -279,10 +280,13 @@ region_alloc(struct Env *e, void *va, size_t len)
   void * end = (void *)ROUNDUP((va + len), PGSIZE);
   struct PageInfo *pg;
   while(start < end) {
-    if(!(pg = page_alloc(1))) panic("region_alloc:page alloc fail\n");
-    page_insert(e->env_pgdir, pg, start, PTE_U | PTE_W);
+    if(!(pg = page_alloc(ALLOC_ZERO))) 
+      panic("region_alloc:page alloc fail\n");
+    if (page_insert(e->env_pgdir, pg, start, PTE_U | PTE_W))
+      panic("region_alloc: page mapping failed.");
     start += PGSIZE;
   }
+
 }
 
 
@@ -340,28 +344,29 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  What?  (See env_run() and env_pop_tf() below.)
 
 	// LAB 3: Your code here.
-  struct Proghdr *ph, *eph;
+  
   struct Elf *elfhdr = (struct Elf *)binary;
   if(elfhdr->e_magic != ELF_MAGIC) 
     panic("load_icode: this is not a elf file.\n");
-  lcr3(PADDR(e->env_pgdir));
-  ph = (struct Proghdr *) (elfhdr + elfhdr->e_phoff);
+  struct Proghdr *ph, *eph;
+  ph = (struct Proghdr *) ((void *)elfhdr + elfhdr->e_phoff);
   eph = (struct Proghdr *) (ph + elfhdr->e_phnum);
+  lcr3(PADDR(e->env_pgdir));
   for(;ph < eph; ph++) {
     if(!(ph->p_type & ELF_PROG_LOAD))
       continue;
     region_alloc(e, (void *)ph->p_va, ph->p_memsz);
     memcpy((void *)ph->p_va,  binary + ph->p_offset, ph->p_filesz);
-    memset((void *)(ph->p_va + ph->p_filesz), 0, (int)(ph->p_memsz - ph->p_filesz));
-    
+    memset((void *)(ph->p_va + ph->p_filesz), 0, (int)(ph->p_memsz - ph->p_filesz));  
   }
-  e->env_tf.tf_eip = elfhdr->e_entry; 
   lcr3(PADDR(kern_pgdir));
+
+  e->env_tf.tf_eip = elfhdr->e_entry;  
   region_alloc(e,(void *)(USTACKTOP - PGSIZE), PGSIZE);
+
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE;
 	// LAB 3: Your code here.
-	region_alloc(e, (void *) (USTACKTOP - PGSIZE), PGSIZE);
 }
 
 //

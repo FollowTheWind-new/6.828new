@@ -33,20 +33,20 @@ i386_init(void)
 
 	// Lab 2 memory management initialization functions
 	mem_init();
-  
+  msr_init();
 	// Lab 3 user environment initialization functions
- 
+
   env_init();
 	trap_init();
-  msr_init();
+  
+
 #if defined(TEST)
 	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
+	ENV_CREATE(user_breakpoint, ENV_TYPE_USER);
 #endif // TEST*
-
 	// We only have one user environment for now, so just run it.
 	env_run(&envs[0]);
   

@@ -6,13 +6,15 @@
 #include <inc/memlayout.h>
 #include <inc/assert.h>
 #include <inc/x86.h>
+#include <inc/types.h>
+#include <inc/mmu.h>
 
 #include <kern/console.h>
 #include <kern/monitor.h>
 #include <kern/kdebug.h>
 #include <kern/trap.h>
+#include <kern/env.h>
 #include <kern/pmap.h>
-
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
 
@@ -28,8 +30,11 @@ static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
   { "smps", "DIsplay information between vitual and physical memory", mon_showmappings},
+  { "bt", "Backtrace from the current task", mon_backtrace},
   { "stp", "Set permissions of vitual address",mon_setpermissions},
   { "clr", "Clear permissions of vitual address",mon_clearpermissions},
+  { "continue", "Continue task interrupted by monitor", mon_continue},
+  { "si", "Continue by one step", mon_mystepi},
 };
 
 /***** Implementations of basic kernel monitor commands *****/
@@ -248,6 +253,28 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 	return 0;
 }
 
+int 
+mon_continue(int argc, char **argv, struct Trapframe *tf)
+{
+  if(tf && (tf->tf_trapno == T_BRKPT || tf->tf_trapno == T_DEBUG)) {
+    assert(curenv && curenv->env_status == ENV_RUNNING);
+    curenv->env_tf.tf_eflags &= (~FL_TF);
+    env_run(curenv);
+  } 
+  return 0;
+}
+
+int
+mon_mystepi(int argc, char **argv, struct Trapframe *tf)
+{
+  assert(tf);
+  curenv->env_tf.tf_eflags |= FL_TF;
+  assert(curenv && curenv->env_status == ENV_RUNNING);
+  cprintf("eip in %08x\n", curenv->env_tf.tf_eip);
+  env_run(curenv);
+  return 0;
+}
+
 
 /***** Kernel monitor command interpreter *****/
 
@@ -297,10 +324,13 @@ void
 monitor(struct Trapframe *tf)
 {
 	char *buf;
-
-	cprintf("Welcome to the JOS kernel monitor!\n");
-	cprintf("Type 'help' for a list of commands.\n");
-
+  static int welcomeflag = 1;
+	if(welcomeflag) {
+    welcomeflag--;
+    cprintf("Welcome to the JOS kernel monitor!\n");
+	  cprintf("Type 'help' for a list of commands.\n");
+  }
+  
 	if (tf != NULL)
 		print_trapframe(tf);
 
