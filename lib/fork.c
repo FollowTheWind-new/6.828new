@@ -16,25 +16,37 @@ pgfault(struct UTrapframe *utf)
 {
 	void *addr = (void *) utf->utf_fault_va;
 	uint32_t err = utf->utf_err;
-	int r;
 
 	// Check that the faulting access was (1) a write, and (2) to a
 	// copy-on-write page.  If not, panic.
 	// Hint:
 	//   Use the read-only page table mappings at uvpt
 	//   (see <inc/memlayout.h>).
-
 	// LAB 4: Your code here.
+  if(!(err & FEC_WR))
+    panic("pgfault :not a fixable fault\n");
+    
+  addr = (void *)ROUNDDOWN(addr, PGSIZE);
+  if(!(uvpt[PGNUM(addr)] & PTE_COW) || !(uvpt[PGNUM(addr)] & PTE_U))
+    panic("pgfault :illegal page privilege!\n");
 
+  envid_t envid = sys_getenvid();
+  if(sys_page_alloc(envid, (void *)PFTEMP, PTE_W|PTE_U|PTE_P) < 0)
+    panic("pgfault: page_alloc error!\n");
+
+  memcpy((void *)PFTEMP, addr, PGSIZE);
+  
+  if(sys_page_map(envid, (void *)PFTEMP, envid, addr, PTE_W|PTE_U|PTE_P) < 0)
+    panic("pgfault: page_map error!\n");
+  if(sys_page_unmap(envid, PFTEMP) < 0)
+    panic("pgfault: page_unmap error!\n");
 	// Allocate a new page, map it at a temporary location (PFTEMP),
 	// copy the data from the old page to the new page, then move the new
 	// page to the old page's address.
 	// Hint:
 	//   You should make three system calls.
 
-	// LAB 4: Your code here.
-
-	panic("pgfault not implemented");
+	// LAB 4: Your code here
 }
 
 //
@@ -51,12 +63,30 @@ pgfault(struct UTrapframe *utf)
 static int
 duppage(envid_t envid, unsigned pn)
 {
-	int r;
+  int r;
+  envid_t thisenv; 
+  if((thisenv = sys_getenvid()) < 0)
+    return (int)thisenv;
+  if(!(uvpt[pn] & PTE_P)) 
+    return -E_INVAL;
 
+  void *addr = (void *)(pn*PGSIZE);
+  if(uvpt[pn] & (PTE_W|PTE_COW)) {
+    if((r = sys_page_map(thisenv, addr, envid, addr, PTE_U|PTE_P|PTE_COW)) < 0)
+      return r;
+    if((r = sys_page_map(thisenv, addr, thisenv, addr, PTE_U|PTE_P|PTE_COW)) < 0)
+      return r;
+  }
+  else {
+    if((r = sys_page_map(thisenv, addr, envid, addr, PTE_U|PTE_P)) < 0)
+      return r;
+  }
 	// LAB 4: Your code here.
-	panic("duppage not implemented");
+	// panic("duppage not implemented");
 	return 0;
 }
+
+
 
 //
 // User-level fork with copy-on-write.
@@ -78,7 +108,31 @@ envid_t
 fork(void)
 {
 	// LAB 4: Your code here.
-	panic("fork not implemented");
+  set_pgfault_handler(pgfault);
+  extern void  _pgfault_upcall(void);
+  envid_t id = sys_exofork();
+  if(id < 0)
+    return id;
+  if(id > 0) {
+    // it's parent here
+    for(uint32_t addr = 0; addr < USTACKTOP; addr += PGSIZE) {
+      if((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_P) && uvpt[PGNUM(addr)] & PTE_U)
+        duppage(id, PGNUM(addr));
+        // fxxk! why everyone except I knows marco PGNUM?
+    }
+    int r;
+    if((r = sys_page_alloc(id, (void *)UXSTACKTOP-PGSIZE, PTE_W|PTE_U|PTE_P)) < 0)
+      panic("fork: %e child exception stk alloc fail!\n",r); 
+    sys_env_set_pgfault_upcall(id, (void *)_pgfault_upcall);
+    if((r = sys_env_set_status(id, ENV_RUNNABLE) < 0))
+      panic("fork: %e child status setting error!\n");
+    return id;
+  }
+  else  {
+    thisenv = &envs[ENVX(sys_getenvid())];
+    return 0;
+  }
+	// panic("fork not implemented");
 }
 
 // Challenge!
