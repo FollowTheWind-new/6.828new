@@ -107,7 +107,8 @@ mpsearch(void)
 
 	static_assert(sizeof(*mp) == 16);
 
-	// The BIOS data area lives in 16-bit segment 0x40.
+	// The BIOS data area lives in 16-bit segment 0x40. 
+
 	bda = (uint8_t *) KADDR(0x40 << 4);
 
 	// [MP 4] The 16-bit segment of the EBDA is in the two bytes
@@ -216,6 +217,7 @@ mp_init(void)
 	cprintf("SMP: CPU %d found %d CPU(s)\n", bootcpu->cpu_id,  ncpu);
 
 	if (mp->imcrp) {
+    // PIC mode :0 / Virtual Wire Mode :1: what is that?
 		// [MP 3.2.6.1] If the hardware implements PIC mode,
 		// switch to getting interrupts from the LAPIC.
 		cprintf("SMP: Setting IMCR to switch from PIC mode to symmetric I/O mode\n");

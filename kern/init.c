@@ -3,6 +3,7 @@
 #include <inc/stdio.h>
 #include <inc/string.h>
 #include <inc/assert.h>
+#include <inc/x86.h>
 
 #include <kern/monitor.h>
 #include <kern/console.h>
@@ -18,21 +19,24 @@
 static void boot_aps(void);
 
 
+
 void
 i386_init(void)
 {
 	// Initialize the console.
 	// Can't call cprintf until after we do this!
 	cons_init();
-
+  // unsigned int i = 0x00646c72;
+  // cprintf("H%x Wo%s", 57616, &i);
 	cprintf("6828 decimal is %o octal!\n", 6828);
 
 	// Lab 2 memory management initialization functions
 	mem_init();
-
+  msr_init();
 	// Lab 3 user environment initialization functions
-	env_init();
+  env_init();
 	trap_init();
+  
 
 	// Lab 4 multiprocessor initialization functions
 	mp_init();
@@ -43,26 +47,27 @@ i386_init(void)
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
-
+  lock_kernel();
 	// Starting non-boot CPUs
 	boot_aps();
 
 	// Start fs.
-	ENV_CREATE(fs_fs, ENV_TYPE_FS);
+	// ENV_CREATE(fs_fs, ENV_TYPE_FS);
 
 #if defined(TEST)
 	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_icode, ENV_TYPE_USER);
-#endif // TEST*
-
 	// Should not be necessary - drains keyboard because interrupt has given up.
-	kbd_intr();
 
 	// Schedule and run the first user environment!
+	ENV_CREATE(user_hello, ENV_TYPE_USER);
+#endif // TEST*
+	// We only have one user environment for now, so just run it.
+	kbd_intr();
 	sched_yield();
+  
 }
 
 // While boot_aps is booting a given CPU, it communicates the per-core
@@ -115,7 +120,8 @@ mp_main(void)
 	// only one CPU can enter the scheduler at a time!
 	//
 	// Your code here:
-
+  lock_kernel();
+  sched_yield();
 	// Remove this after you finish Exercise 6
 	for (;;);
 }
@@ -166,3 +172,4 @@ _warn(const char *file, int line, const char *fmt,...)
 	cprintf("\n");
 	va_end(ap);
 }
+

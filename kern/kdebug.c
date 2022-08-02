@@ -66,7 +66,9 @@ stab_binsearch(const struct Stab *stabs, int *region_left, int *region_right,
 		int true_m = (l + r) / 2, m = true_m;
 
 		// search for earliest stab with right type
-		while (m >= l && stabs[m].n_type != type)
+		// why ?
+
+    while (m >= l && stabs[m].n_type != type)
 			m--;
 		if (m < l) {	// no match in [l, m]
 			l = true_m + 1;
@@ -142,6 +144,8 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 		// Make sure this memory is valid.
 		// Return -1 if it is not.  Hint: Call user_mem_check.
 		// LAB 3: Your code here.
+    if(user_mem_check(curenv, (void *)usd, sizeof(struct UserStabData), PTE_U))
+      return -1;
 
 		stabs = usd->stabs;
 		stab_end = usd->stab_end;
@@ -150,6 +154,10 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 
 		// Make sure the STABS and string table memory is valid.
 		// LAB 3: Your code here.
+    if(user_mem_check(curenv, (void *)usd->stabs, (size_t)(usd->stab_end - usd->stabs), PTE_U) < 0)
+      return -1;
+    if(user_mem_check(curenv, (void *)usd->stabstr, (size_t)(usd->stabstr_end - usd->stabstr), PTE_U) < 0)
+      return -1;
 	}
 
 	// String table validity checks
@@ -204,7 +212,8 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	//	Look at the STABS documentation and <inc/stab.h> to find
 	//	which one.
 	// Your code here.
-
+  stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+  info->eip_line = lline > rline ? -1 : stabs[lline].n_desc; 
 
 	// Search backwards from the line number for the relevant filename
 	// stab.
