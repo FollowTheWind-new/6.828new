@@ -75,7 +75,7 @@ trap_init(void)
 	// LAB 3: Your code here.
   for (int i = 0; i < 256; i++)
     SETGATE(idt[i], 0, GD_KT, vectors[i], 0);
-  SETGATE(idt[T_SYSCALL], 1, GD_KT, vectors[T_SYSCALL], 3);
+  SETGATE(idt[T_SYSCALL], 0, GD_KT, vectors[T_SYSCALL], 3);
   SETGATE(idt[T_BRKPT], 0, GD_KT, vectors[T_BRKPT], 3);
 
 	// Per-CPU setup 
@@ -186,11 +186,11 @@ trap_dispatch(struct Trapframe *tf)
 	// Handle spurious interrupts
 	// The hardware sometimes raises these because of noise on the
 	// IRQ line or other reasons. We don't care.
-	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
-		cprintf("Spurious interrupt on irq 7\n");
-		print_trapframe(tf);
-		return;
-	}
+	// if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
+	// 	cprintf("Spurious interrupt on irq 7\n");
+	// 	print_trapframe(tf);
+	// 	return;
+	// }
 
 	// Handle clock interrupts. Don't forget to acknowledge the
 	// interrupt using lapic_eoi() before calling the scheduler!
@@ -211,7 +211,14 @@ trap_dispatch(struct Trapframe *tf)
   case T_DEBUG:
     monitor(tf);
     return;
-  
+  case IRQ_OFFSET + IRQ_SPURIOUS:
+    cprintf("Spurious interrupt on irq 7\n");
+		print_trapframe(tf);
+		return;
+  case IRQ_OFFSET + IRQ_TIMER:
+    lapic_eoi();
+    sched_yield();
+    return;
   default:
     print_trapframe(tf);
 	  if (tf->tf_cs == GD_KT)
@@ -229,7 +236,8 @@ trap(struct Trapframe *tf)
 {
 	// The environment may have set DF and some versions
 	// of GCC rely on DF being clear
-	asm volatile("cld" ::: "cc");
+  // you need to remove cli later, though i don't know why
+	asm volatile("cld;" ::: "cc");
 
 	// Halt the CPU if some other CPU has called panic()
 	extern char *panicstr;
