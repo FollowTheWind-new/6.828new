@@ -52,7 +52,7 @@ i386_init(void)
 	boot_aps();
 
 	// Start fs.
-	// ENV_CREATE(fs_fs, ENV_TYPE_FS);
+	ENV_CREATE(fs_fs, ENV_TYPE_FS);
 
 #if defined(TEST)
 	// Don't touch -- used by grading script!
@@ -67,7 +67,7 @@ i386_init(void)
 	// We only have one user environment for now, so just run it.
 	kbd_intr();
 	sched_yield();
-  
+
 }
 
 // While boot_aps is booting a given CPU, it communicates the per-core

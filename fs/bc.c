@@ -37,7 +37,6 @@ bc_pgfault(struct UTrapframe *utf)
 	if (addr < (void*)DISKMAP || addr >= (void*)(DISKMAP + DISKSIZE))
 		panic("page fault in FS: eip %08x, va %08x, err %04x",
 		      utf->utf_eip, addr, utf->utf_err);
-
 	// Sanity check the block number.
 	if (super && blockno >= super->s_nblocks)
 		panic("reading non-existent block %08x\n", blockno);
@@ -48,7 +47,12 @@ bc_pgfault(struct UTrapframe *utf)
 	// the disk.
 	//
 	// LAB 5: you code here:
-
+  addr = (void *)ROUNDDOWN(addr, PGSIZE);
+  if((r = sys_page_alloc(0, addr, PTE_U|PTE_W|PTE_P))) 
+    panic("bc_pgfault:pg alloc error %e\n", r);
+  if((r = ide_read(blockno*BLKSECTS, addr, BLKSECTS)) < 0)
+    panic("ba_pgfault:disk reading error %e\n", r);
+  
 	// Clear the dirty bit for the disk block page since we just read the
 	// block from disk
 	if ((r = sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_SYSCALL)) < 0)
@@ -75,9 +79,13 @@ flush_block(void *addr)
 
 	if (addr < (void*)DISKMAP || addr >= (void*)(DISKMAP + DISKSIZE))
 		panic("flush_block of bad va %08x", addr);
-
+  if(!va_is_mapped(addr) || !(va_is_dirty(addr))) 
+    return;
+  addr = (void *)ROUNDDOWN(addr, PGSIZE);
+  ide_write(blockno*BLKSECTS, addr, PGSIZE/SECTSIZE);
+  sys_page_map(0, addr, 0, addr, uvpt[PGNUM(addr)] & PTE_AVAIL);
 	// LAB 5: Your code here.
-	panic("flush_block not implemented");
+	// panic("flush_block not implemented");
 }
 
 // Test that the block cache works, by smashing the superblock and
