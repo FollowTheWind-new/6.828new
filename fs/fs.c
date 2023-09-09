@@ -6,6 +6,8 @@
 // --------------------------------------------------------------
 // Super block
 // --------------------------------------------------------------
+struct Super *super;
+uint32_t *bitmap;
 
 // Validate the file system super-block.
 void

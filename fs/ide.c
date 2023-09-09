@@ -7,6 +7,7 @@
 #include "fs.h"
 #include <inc/x86.h>
 
+
 #define IDE_BSY		0x80
 #define IDE_DRDY	0x40
 #define IDE_DF		0x20
