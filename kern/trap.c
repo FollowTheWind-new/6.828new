@@ -212,8 +212,8 @@ trap_dispatch(struct Trapframe *tf)
     return;
   case IRQ_OFFSET + IRQ_SPURIOUS:
     cprintf("Spurious interrupt on irq 7\n");
-		print_trapframe(tf);
-		return;
+	print_trapframe(tf);
+	return;
   case IRQ_OFFSET + IRQ_TIMER:
     lapic_eoi();
     sched_yield();
@@ -235,7 +235,7 @@ trap(struct Trapframe *tf)
 {
 	// The environment may have set DF and some versions
 	// of GCC rely on DF being clear
-  // you need to remove cli later, though i don't know why
+  	// you need to remove cli later, though i don't know why
 	asm volatile("cld;" ::: "cc");
 
 	// Halt the CPU if some other CPU has called panic()
@@ -338,7 +338,7 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 4: Your code here.
 
-  if(curenv->env_pgfault_upcall) {
+  	if(curenv->env_pgfault_upcall) {
     struct UTrapframe *utf; uintptr_t new_esp;
 
     if(tf->tf_esp < UXSTACKTOP && tf->tf_esp >= UXSTACKTOP - PGSIZE)
@@ -363,7 +363,7 @@ page_fault_handler(struct Trapframe *tf)
     tf->tf_esp = (uint32_t)utf;
     tf->tf_eip = (uint32_t)curenv->env_pgfault_upcall;
     env_run(curenv);
-  }
+  	}
 	// Destroy the environment that caused the fault.
 	cprintf("[%08x] user fault va %08x ip %08x\n",
 		curenv->env_id, fault_va, tf->tf_eip);
