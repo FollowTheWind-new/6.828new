@@ -74,7 +74,7 @@ str2num(char *s, int scale){
       s++;
     }
   }
-  cprintf("%d",num);
+  // cprintf("%d",num);
   return *s ? -1 : num;
 } 
 
@@ -109,7 +109,7 @@ validate_and_retrieve(int argc, char**argv, uint32_t *va_start, uint32_t *n_page
 
   if(!IS_HEX(argv[1])) panic(hint);
   *va_start = ROUNDDOWN(str2num(argv[1],16),PGSIZE);
-  cprintf("va_start1: %d",*va_start);
+  // cprintf("va_start1: %s", argv[1]);
   if(argc == 2) *n_pages = 1;
   else if(IS_HEX(argv[2])) {
     *n_pages = (ROUNDUP(str2num(argv[2],16),PGSIZE) - *va_start)/PGSIZE;
@@ -118,7 +118,7 @@ validate_and_retrieve(int argc, char**argv, uint32_t *va_start, uint32_t *n_page
     *n_pages = str2num(argv[2],10);
   }
   if(*va_start<0||*n_pages<0) panic(hint);
-  cprintf("va_start:%d_______n_pages:%d\n", *va_start, *n_pages);
+  cprintf("va_start:%s_______n_pages:%d\n", argv[1], *n_pages);
 }
 
 static inline void

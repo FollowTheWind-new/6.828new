@@ -34,5 +34,6 @@ void
 umain(int argc, char **argv)
 {
 	forktree("");
+	// cprintf("uvpd: %08x, uvpt: %08x\n", uvpd, uvpt);
 }
 

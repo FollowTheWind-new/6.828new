@@ -210,6 +210,14 @@ trap_dispatch(struct Trapframe *tf)
   case T_DEBUG:
     monitor(tf);
     return;
+  case IRQ_OFFSET + IRQ_KBD:
+	lapic_eoi();
+	kbd_intr();
+	return;
+  case IRQ_OFFSET + IRQ_SERIAL:
+	lapic_eoi();
+	serial_intr();
+	return;
   case IRQ_OFFSET + IRQ_SPURIOUS:
     cprintf("Spurious interrupt on irq 7\n");
 	print_trapframe(tf);
@@ -258,7 +266,7 @@ trap(struct Trapframe *tf)
 		// serious kernel work.
 		// LAB 4: Your code here.
 		lock_kernel();
-    assert(curenv);
+    	assert(curenv);
 
 		// Garbage collect if current enviroment is a zombie
 		if (curenv->env_status == ENV_DYING) {

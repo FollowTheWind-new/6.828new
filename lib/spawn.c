@@ -302,6 +302,17 @@ static int
 copy_shared_pages(envid_t child)
 {
 	// LAB 5: Your code here.
+	envid_t thisenv;
+	int r = 0;
+	if((thisenv = sys_getenvid()) < 0) 
+		return (int)thisenv;
+	// addr can start from UTEXT rather than 0, why? 
+	for(uint32_t addr = 0; addr < USTACKTOP; addr += PGSIZE) {
+		if((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_SHARE)) {
+			if((r = sys_page_map(thisenv, (void *)addr, child, (void *)addr, uvpt[PGNUM(addr)]&PTE_SYSCALL)) < 0)
+				return r;
+		}
+	}
 	return 0;
 }
 

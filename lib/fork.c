@@ -64,21 +64,24 @@ static int
 duppage(envid_t envid, unsigned pn)
 {
   int r;
-  envid_t thisenv; 
-  if((thisenv = sys_getenvid()) < 0)
-    return (int)thisenv;
+  envid_t thisid = thisenv->env_id; 
   if(!(uvpt[pn] & PTE_P)) 
     return -E_INVAL;
-
   void *addr = (void *)(pn*PGSIZE);
-  if(uvpt[pn] & (PTE_W|PTE_COW)) {
-    if((r = sys_page_map(thisenv, addr, envid, addr, PTE_U|PTE_P|PTE_COW)) < 0)
+  // is this true? I can't give a quite answer.
+  if(uvpt[pn] & PTE_SHARE) {
+    if((r = sys_page_map(thisid, addr, envid, addr, uvpt[pn]&PTE_SYSCALL)) < 0) 
       return r;
-    if((r = sys_page_map(thisenv, addr, thisenv, addr, PTE_U|PTE_P|PTE_COW)) < 0)
+    
+  }
+  else if(uvpt[pn] & (PTE_W|PTE_COW)) {
+    if((r = sys_page_map(thisid, addr, envid, addr, PTE_U|PTE_P|PTE_COW)) < 0)
+      return r;
+    if((r = sys_page_map(thisid, addr, thisid, addr, PTE_U|PTE_P|PTE_COW)) < 0)
       return r;
   }
   else {
-    if((r = sys_page_map(thisenv, addr, envid, addr, PTE_U|PTE_P)) < 0)
+    if((r = sys_page_map(thisid, addr, envid, addr, PTE_U|PTE_P)) < 0)
       return r;
   }
 	// LAB 4: Your code here.
@@ -116,9 +119,8 @@ fork(void)
   if(id > 0) {
     // it's parent here
     for(uint32_t addr = 0; addr < USTACKTOP; addr += PGSIZE) {
-      if((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_P) && uvpt[PGNUM(addr)] & PTE_U)
+      if((uvpd[PDX(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_P) && (uvpt[PGNUM(addr)] & PTE_U))
         duppage(id, PGNUM(addr));
-        // fxxk! why everyone except I knows marco PGNUM?
     }
     int r;
     if((r = sys_page_alloc(id, (void *)UXSTACKTOP-PGSIZE, PTE_W|PTE_U|PTE_P)) < 0)
